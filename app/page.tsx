@@ -50,12 +50,14 @@ export default function Home() {
       const formData = new FormData()
       formData.append('file', file)
       const res = await fetch('/api/upload-face', { method: 'POST', body: formData })
-      if (!res.ok) throw new Error('Upload failed')
-      const { url } = await res.json()
-      setFaceUrl(url)
-      localStorage.setItem('styleai_face_url', url)
-    } catch {
-      setError('Could not upload face photo. Please try again.')
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`)
+      setFaceUrl(data.url)
+      localStorage.setItem('styleai_face_url', data.url)
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Upload failed'
+      console.error('Face upload error:', msg)
+      setError(msg)
     } finally {
       setIsUploadingFace(false)
     }
@@ -256,6 +258,13 @@ export default function Home() {
               className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFaceFile(e.target.files[0])}
             />
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
+                <p className="text-sm font-bold text-red-600">Upload failed</p>
+                <p className="text-xs text-red-500 mt-1">{error}</p>
+              </div>
+            )}
 
             <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4 space-y-1.5">
               <p className="text-sm font-semibold text-violet-700">Tips for best results</p>
