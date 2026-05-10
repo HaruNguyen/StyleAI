@@ -253,7 +253,6 @@ export default function Home() {
               ref={faceInputRef}
               type="file"
               accept="image/*"
-              capture="user"
               className="hidden"
               onChange={(e) => e.target.files?.[0] && handleFaceFile(e.target.files[0])}
             />
