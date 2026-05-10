@@ -50,10 +50,13 @@ export async function POST(req: NextRequest) {
     const negativePrompt =
       'ugly, deformed, mutated, bad anatomy, bad hands, extra fingers, missing fingers, blurry, low quality, watermark, text, logo, distorted face, bad proportions'
 
+    // Accept either a URL or a base64 data URI
+    const faceInput = faceUrl.startsWith('data:') ? faceUrl : faceUrl
+
     const prediction = await replicate.predictions.create({
       model: 'zsxkib/instant-id',
       input: {
-        image: faceUrl,
+        image: faceInput,
         prompt,
         negative_prompt: negativePrompt,
         num_inference_steps: 30,

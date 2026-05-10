@@ -43,20 +43,38 @@ export default function Home() {
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
+  const compressAndStoreFace = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        img.src = e.target?.result as string
+        img.onload = () => {
+          const maxSize = 512
+          const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1)
+          const canvas = document.createElement('canvas')
+          canvas.width = Math.round(img.width * ratio)
+          canvas.height = Math.round(img.height * ratio)
+          const ctx = canvas.getContext('2d')!
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+          resolve(canvas.toDataURL('image/jpeg', 0.85))
+        }
+        img.onerror = reject
+      }
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+  }
+
   const handleFaceFile = async (file: File) => {
     setIsUploadingFace(true)
     setError(null)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      const res = await fetch('/api/upload-face', { method: 'POST', body: formData })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error || `Upload failed (${res.status})`)
-      setFaceUrl(data.url)
-      localStorage.setItem('styleai_face_url', data.url)
+      const dataUrl = await compressAndStoreFace(file)
+      localStorage.setItem('styleai_face_url', dataUrl)
+      setFaceUrl(dataUrl)
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : 'Upload failed'
-      console.error('Face upload error:', msg)
+      const msg = e instanceof Error ? e.message : 'Could not process image'
       setError(msg)
     } finally {
       setIsUploadingFace(false)
