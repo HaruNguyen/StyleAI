@@ -136,7 +136,6 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           faceUrl,
-          bgBase64,
           style: selectedStyle,
           analysis,
           customPrompt,
